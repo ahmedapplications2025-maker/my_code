@@ -92,19 +92,20 @@ body {
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 10px; color: var(--text);
     font-family: 'Cairo', sans-serif; font-size: 13px;
-    width: 200px; transition: all 0.3s;
+    width: 320px; transition: all 0.3s;
 }
 .search-input::placeholder { color: var(--text-muted); }
-.search-input:focus { outline: none; border-color: var(--primary); width: 240px; }
+.search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(90,223,229,0.2); }
 
 .admin-trigger {
-    width: 34px; height: 34px;
-    background: transparent; border: 1px solid var(--border);
-    border-radius: 9px; cursor: pointer;
+    width: 10px; height: 10px;
+    background: transparent; border: none;
+    border-radius: 50%; cursor: default;
     display: flex; align-items: center; justify-content: center;
-    font-size: 15px; transition: all 0.25s; color: var(--text-muted);
+    font-size: 0; color: transparent;
+    opacity: 0; padding: 0; outline: none;
 }
-.admin-trigger:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,85,128,0.1); }
+.admin-trigger:hover { background: transparent; border: none; }
 
 /* ===== HOME PAGE ===== */
 #homePage {
@@ -661,6 +662,44 @@ body {
     font-weight: 700;
 }
 
+/* ===== LOADING SCREEN ===== */
+#loadingScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #090B0F;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    transition: opacity 0.4s ease;
+}
+#loadingScreen.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+.loading-logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 0 28px var(--glow);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+.loading-bar {
+    width: 160px; height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px; overflow: hidden;
+}
+.loading-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 10px;
+    animation: loadBar 1.2s ease-in-out infinite;
+}
+@keyframes loadBar {
+    0% { width: 0%; margin-right: 100%; }
+    50% { width: 60%; margin-right: 0%; }
+    100% { width: 0%; margin-right: 0%; }
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 600px) {
     .header { padding: 0 14px; }
@@ -674,6 +713,12 @@ body {
 </style>
 </head>
 <body>
+
+<!-- Loading Screen -->
+<div id="loadingScreen">
+    <div class="loading-logo">💻</div>
+    <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+</div>
 
 <!-- Header -->
 <div class="header">
@@ -749,10 +794,12 @@ body {
             </div>
 
             <div id="adminPanel" class="admin-panel">
-                <div class="admin-tabs">
-                    <button class="admin-tab active" onclick="switchAdminTab('add',this)">➕ إضافة كود</button>
-                    <button class="admin-tab" onclick="switchAdminTab('addtool',this)">🛠️ إضافة أداة</button>
+                <div class="admin-tabs" style="flex-wrap:wrap;">
+                    <button class="admin-tab active" onclick="switchAdminTab('add',this)">➕ كود</button>
+                    <button class="admin-tab" onclick="switchAdminTab('addtool',this)">🛠️ أداة</button>
+                    <button class="admin-tab" onclick="switchAdminTab('edittool',this)">✏️ تعديل أداة</button>
                     <button class="admin-tab" onclick="switchAdminTab('manage',this)">📋 إدارة</button>
+                    <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ إعدادات</button>
                 </div>
 
                 <!-- إضافة كود -->
@@ -826,6 +873,75 @@ body {
                     </div>
                     <div class="admin-cards-list" id="adminCardsList"></div>
                 </div>
+
+                <!-- تعديل أداة -->
+                <div id="admin-edittool" class="admin-section">
+                    <div class="form-row">
+                        <label class="form-label">اختر الأداة للتعديل</label>
+                        <select class="f-select" id="et-select" onchange="loadToolForEdit(this.value)">
+                            <option value="">-- اختر أداة --</option>
+                        </select>
+                    </div>
+                    <div id="et-form" style="display:none;">
+                        <div class="form-row">
+                            <label class="form-label">اسم الأداة <span class="req">*</span></label>
+                            <input type="text" class="f-input" id="et-title">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">أيقونة (إيموجي)</label>
+                            <input type="text" class="f-input" id="et-icon" style="width:80px;text-align:center;font-size:1.4em;">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">وصف الأداة <span class="req">*</span></label>
+                            <textarea class="f-textarea" id="et-desc"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">الكلمات المفتاحية</label>
+                            <input type="text" class="f-input" id="et-keys">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">كود HTML الأداة <span class="req">*</span></label>
+                            <textarea class="f-textarea f-code" id="et-code" style="min-height:140px;"></textarea>
+                        </div>
+                        <div class="divider"></div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="submit-btn" id="saveToolEditBtn" onclick="saveToolEdit()" style="flex:2;"><span>💾 حفظ التعديلات</span></button>
+                            <button class="submit-btn" id="deleteToolBtn" onclick="deleteToolFromEdit()" style="flex:1;background:linear-gradient(135deg,#ff4466,#cc0033);box-shadow:0 4px 18px rgba(255,0,60,0.25);"><span>🗑️ حذف</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إعدادات -->
+                <div id="admin-settings" class="admin-section">
+                    <div style="background:rgba(255,85,128,0.05);border:1px solid rgba(255,85,128,0.15);border-radius:12px;padding:16px;margin-bottom:14px;">
+                        <div style="font-size:0.85em;font-weight:800;color:var(--text-muted);margin-bottom:12px;">🔑 تغيير كلمة المرور</div>
+                        <div class="form-row">
+                            <label class="form-label">كلمة المرور الحالية</label>
+                            <input type="password" class="f-input" id="s-old-pw" placeholder="••••••••">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">كلمة المرور الجديدة</label>
+                            <input type="password" class="f-input" id="s-new-pw" placeholder="••••••••">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">تأكيد كلمة المرور</label>
+                            <input type="password" class="f-input" id="s-confirm-pw" placeholder="••••••••">
+                        </div>
+                        <button class="submit-btn" onclick="changePassword()" style="margin-top:4px;"><span>🔒 حفظ كلمة المرور</span></button>
+                    </div>
+                    <div style="background:rgba(90,223,229,0.05);border:1px solid rgba(90,223,229,0.15);border-radius:12px;padding:16px;">
+                        <div style="font-size:0.85em;font-weight:800;color:var(--text-muted);margin-bottom:6px;">🎨 تخصيص مظهر الموقع (CSS)</div>
+                        <div style="font-size:0.74em;color:var(--text-muted);margin-bottom:10px;">مثال: <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;">body { background: #000 !important; }</code></div>
+                        <div class="form-row">
+                            <textarea class="f-textarea f-code" id="s-custom-css" placeholder="/* اكتب CSS هنا */&#10;body { background: ... !important; }" style="min-height:160px;"></textarea>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="submit-btn" onclick="applyCustomCSS()" style="flex:2;"><span>✅ تطبيق</span></button>
+                            <button class="submit-btn" onclick="resetCustomCSS()" style="flex:1;background:linear-gradient(135deg,#555,#333);box-shadow:none;"><span>↩️ إعادة</span></button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -834,55 +950,23 @@ body {
 <!-- Toast -->
 <div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
 
-<!-- Firebase REST API - لا يحتاج مكتبة خارجية -->
-<script>
-const PROJECT_ID = "codehub-4d5fd";
-const API_KEY = "AIzaSyDDdgC3WI72Ib_GE1qK5QSlHs_lEJ-aqD0";
-const BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-function parseDoc(doc) {
-    const id = doc.name.split('/').pop();
-    const data = {};
-    for (const [k,v] of Object.entries(doc.fields||{})) {
-        data[k] = v.stringValue !== undefined ? v.stringValue
-                : v.integerValue !== undefined ? Number(v.integerValue)
-                : v.doubleValue !== undefined ? v.doubleValue
-                : v.booleanValue !== undefined ? v.booleanValue : '';
-    }
-    return { id, ...data };
-}
-
-function toFields(data) {
-    const fields = {};
-    for (const [k,v] of Object.entries(data)) {
-        if (typeof v === 'number') fields[k] = { integerValue: String(v) };
-        else fields[k] = { stringValue: String(v||'') };
-    }
-    return fields;
-}
-
-const db = {
-    async getCollection(coll) {
-        const r = await fetch(`${BASE}/${coll}?key=${API_KEY}`);
-        const j = await r.json();
-        if (!j.documents) return [];
-        return j.documents.map(parseDoc).sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    },
-    async addDoc(coll, data) {
-        const r = await fetch(`${BASE}/${coll}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ fields: toFields(data) })
-        });
-        if (!r.ok) throw new Error(await r.text());
-        return r.json();
-    },
-    async deleteDoc(coll, id) {
-        const r = await fetch(`${BASE}/${coll}/${id}?key=${API_KEY}`, { method: 'DELETE' });
-        if (!r.ok) throw new Error('فشل الحذف');
-        return true;
-    }
+const firebaseConfig = {
+    apiKey: "AIzaSyDDdgC3WI72Ib_GE1qK5QSlHs_lEJ-aqD0",
+    authDomain: "codehub-4d5fd.firebaseapp.com",
+    databaseURL: "https://codehub-4d5fd-default-rtdb.firebaseio.com",
+    projectId: "codehub-4d5fd",
+    storageBucket: "codehub-4d5fd.firebasestorage.app",
+    messagingSenderId: "1005574781043",
+    appId: "1:1005574781043:web:01098302e674dfea161206"
 };
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const ADMIN_PASSWORD = "codehub2024";
 let currentDiff = 'beginner';
@@ -891,20 +975,44 @@ let allData = { html: [], tools: [] };
 // ===== LOAD DATA =====
 async function loadAll() {
     try {
-        allData.html = await db.getCollection('html_cards');
-        allData.tools = await db.getCollection('tools');
+        const qh = query(collection(db, 'html_cards'), orderBy('createdAt', 'desc'));
+        const sh = await getDocs(qh);
+        allData.html = [];
+        sh.forEach(d => allData.html.push({ id: d.id, ...d.data() }));
+
+        const qt = query(collection(db, 'tools'), orderBy('createdAt', 'desc'));
+        const st = await getDocs(qt);
+        allData.tools = [];
+        st.forEach(d => allData.tools.push({ id: d.id, ...d.data() }));
+
+        // ── جلب CSS من Firebase وتطبيقه على كل الزوار ──
+        try {
+            const settingsSnap = await getDoc(doc(db, 'settings', 'site'));
+            if (settingsSnap.exists()) {
+                const css = settingsSnap.data().customCSS || '';
+                let styleEl = document.getElementById('custom-css-tag');
+                if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'custom-css-tag'; document.head.appendChild(styleEl); }
+                styleEl.textContent = css;
+            }
+        } catch(_) {}
+
         renderHome();
     } catch(e) {
         console.error(e);
         showToast('خطأ في التحميل', 'error');
+    } finally {
+        const ls = document.getElementById('loadingScreen');
+        ls.classList.add('hide');
+        setTimeout(() => ls.style.display = 'none', 400);
     }
 }
 
-// ===== RENDER HOME =====
+// ===== RENDER HOME (flat: tools then codes) =====
 function renderHome() {
     const list = document.getElementById('accList');
     let html = '';
 
+    // ── قسم الأدوات ──
     if (allData.tools.length > 0) {
         html += `<div class="section-label">🛠️ الأدوات</div>`;
         allData.tools.forEach(tool => {
@@ -915,6 +1023,8 @@ function renderHome() {
                     <div class="acc-info">
                         <div class="acc-name">${esc(tool.title)}</div>
                         <div class="acc-desc">${esc(tool.description)}</div>
+
+
                     </div>
                     <div class="acc-meta">
                         <span class="acc-count" style="background:rgba(90,223,229,0.1);border-color:rgba(90,223,229,0.2);color:#5ADFE5;">أداة</span>
@@ -925,9 +1035,12 @@ function renderHome() {
         });
     }
 
+    // ── قسم الأكواد ──
     if (allData.html.length > 0) {
         html += `<div class="section-label" style="margin-top:${allData.tools.length>0?'28px':'0'}">🌐 أكواد جاهزة</div>`;
-        allData.html.forEach(card => { html += buildCodeEntry(card); });
+        allData.html.forEach(card => {
+            html += buildCodeEntry(card);
+        });
     }
 
     if (!html) {
@@ -960,13 +1073,55 @@ function buildCodeEntry(card) {
     </div>`;
 }
 
-// ===== OPEN TOOL =====
-function handleToolClick(el, toolId) {
+// ===== OPEN SINGLE CODE FULL VIEW =====
+window.openCodeView = function(cardId) {
+    const card = allData.html.find(c => c.id === cardId);
+    if (!card) return;
+
+    const diffMap = { beginner:'مبتدئ', intermediate:'متوسط', advanced:'متقدم' };
+    const tagsHTML = card.keywords
+        ? card.keywords.split(',').map(k=>`<span class="tag">#${esc(k.trim())}</span>`).join('')
+        : '';
+    const imgHTML = card.imageUrl
+        ? `<div class="preview-img-wrap" onclick="window.open('${esc(card.imageUrl)}','_blank')">
+               <img class="preview-img" src="${esc(card.imageUrl)}" alt="">
+               <div class="preview-overlay"><div class="overlay-btn">🔍 عرض أكبر</div></div>
+           </div>`
+        : `<div class="no-img"><span>🖼️</span><span>لا توجد صورة</span></div>`;
+
+    document.getElementById('fvTitle').textContent = card.title;
+    document.getElementById('fvSubtitle').textContent = 'كود ' + (diffMap[card.difficulty] || 'مبتدئ');
+    document.getElementById('fvBody').innerHTML = `
+        <div class="fv-codes-body">
+            <div style="max-width:700px;margin:0 auto;">
+                <div class="code-card" style="transform:none !important;">
+                    ${imgHTML}
+                    <div class="card-body">
+                        <div class="card-top">
+                            <span class="code-title">${esc(card.title)}</span>
+                            <span class="difficulty ${card.difficulty||'beginner'}">${diffMap[card.difficulty]||'مبتدئ'}</span>
+                        </div>
+                        <p class="description">${esc(card.description)}</p>
+                        ${tagsHTML ? `<div class="tags">${tagsHTML}</div>` : ''}
+                        <div class="card-actions">
+                            <button class="show-btn" onclick="toggleCodeBox(this)">👁️ عرض الكود</button>
+                            <button class="copy-btn" onclick="copyCodeBox(this)">📋 نسخ الكود</button>
+                        </div>
+                    </div>
+                    <div class="code-box"><pre>${esc(card.code)}</pre></div>
+                </div>
+            </div>
+        </div>`;
+    showFull();
+};
+
+// ===== OPEN TOOL FULL VIEW =====
+window.handleToolClick = function(el, toolId) {
     el.classList.add('open');
     openTool(toolId);
-}
+};
 
-function openTool(toolId) {
+window.openTool = function(toolId) {
     const tool = allData.tools.find(t => t.id === toolId);
     if (!tool) return;
 
@@ -981,7 +1136,7 @@ function openTool(toolId) {
             <iframe src="${blobUrl}" sandbox="allow-scripts allow-forms allow-same-origin" allowfullscreen></iframe>
         </div>`;
     showFull();
-}
+};
 
 function showFull() {
     document.getElementById('fullView').classList.add('show');
@@ -990,25 +1145,25 @@ function showFull() {
     document.body.style.overflow = 'hidden';
 }
 
-function closeFull() {
+window.closeFull = function() {
     document.getElementById('fullView').classList.remove('show');
     document.getElementById('homePage').style.display = 'block';
     document.getElementById('footerEl').style.display = 'block';
     document.body.style.overflow = '';
     document.getElementById('fvBody').innerHTML = '';
     document.querySelectorAll('.tool-row').forEach(t => t.classList.remove('open'));
-}
+};
 
 // ===== CODE ROW BUTTONS =====
-function toggleCodeRowBox(btn, e) {
+window.toggleCodeRowBox = function(btn, e) {
     e.stopPropagation();
     const box = btn.closest('.code-row').querySelector('.code-row-box');
     const open = box.style.display === 'block';
     box.style.display = open ? 'none' : 'block';
     btn.textContent = open ? '👁️ عرض الكود' : '🙈 إخفاء الكود';
-}
+};
 
-function copyCodeRow(btn, e, cardId) {
+window.copyCodeRow = function(btn, e, cardId) {
     e.stopPropagation();
     const card = allData.html.find(c => c.id === cardId);
     if (!card) return;
@@ -1017,31 +1172,33 @@ function copyCodeRow(btn, e, cardId) {
         btn.textContent = '✅ تم النسخ!';
         setTimeout(() => btn.textContent = orig, 2200);
     });
-}
-
-function toggleCodeBox(btn) {
+};
+window.toggleCodeBox = function(btn) {
     const box = btn.closest('.code-card').querySelector('.code-box');
     const open = box.style.display === 'block';
     box.style.display = open ? 'none' : 'block';
     btn.textContent = open ? '👁️ عرض الكود' : '🙈 إخفاء الكود';
-}
+};
 
-function copyCodeBox(btn) {
-    const code = btn.closest('.code-card').querySelector('.code-box pre')?.textContent || '';
+window.copyCodeBox = function(btn) {
+    const box = btn.closest('.code-card').querySelector('.code-box');
+    const code = box.querySelector('pre')?.textContent || box.textContent;
     navigator.clipboard.writeText(code.trim()).then(() => {
         const orig = btn.textContent;
         btn.textContent = '✅ تم النسخ!';
         setTimeout(() => btn.textContent = orig, 2200);
     });
-}
+};
 
 // ===== SEARCH =====
-function searchCards(q) {
+window.searchCards = function(q) {
     const term = q.toLowerCase();
-    document.querySelectorAll('.acc-item, .code-row').forEach(item => {
-        item.style.display = (!term || item.textContent.toLowerCase().includes(term)) ? '' : 'none';
+    document.querySelectorAll('.acc-item').forEach(item => {
+        const txt = item.textContent.toLowerCase();
+        item.style.display = (!term || txt.includes(term)) ? '' : 'none';
     });
     document.querySelectorAll('.section-label').forEach(label => {
+        // أخفِ العنوان لو كل العناصر بعده مخفية
         let next = label.nextElementSibling;
         let anyVisible = false;
         while (next && !next.classList.contains('section-label')) {
@@ -1050,68 +1207,101 @@ function searchCards(q) {
         }
         label.style.display = anyVisible ? '' : 'none';
     });
-}
+};
 
-// ===== ADMIN =====
-function openAdminModal() {
+// ===== ADMIN MODAL =====
+window.openAdminModal = function() {
     document.getElementById('adminModal').classList.add('open');
     document.getElementById('pwScreen').style.display = 'block';
     document.getElementById('adminPanel').classList.remove('show');
     document.getElementById('pwInput').value = '';
     document.getElementById('pwError').style.display = 'none';
     setTimeout(() => document.getElementById('pwInput').focus(), 300);
-}
+};
+window.closeAdminModal = function() { document.getElementById('adminModal').classList.remove('open'); };
+document.getElementById('adminModal').addEventListener('click', e => { if(e.target===document.getElementById('adminModal')) closeAdminModal(); });
 
-function closeAdminModal() {
-    document.getElementById('adminModal').classList.remove('open');
-}
+window.checkPassword = function() {
+    const currentPw = localStorage.getItem('codehub_admin_pw') || ADMIN_PASSWORD;
+    const lockUntil = parseInt(localStorage.getItem('codehub_lock_until') || '0');
+    const now = Date.now();
 
-document.getElementById('adminModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('adminModal')) closeAdminModal();
-});
+    if (now < lockUntil) {
+        const secs = Math.ceil((lockUntil - now) / 1000);
+        document.getElementById('pwError').textContent = `🔒 انتظر ${secs} ثانية`;
+        document.getElementById('pwError').style.display = 'block';
+        return;
+    }
 
-function checkPassword() {
-    if (document.getElementById('pwInput').value === ADMIN_PASSWORD) {
+    let attempts = parseInt(localStorage.getItem('codehub_attempts') || '0');
+
+    if (document.getElementById('pwInput').value === currentPw) {
+        localStorage.removeItem('codehub_attempts');
+        localStorage.removeItem('codehub_lock_until');
         document.getElementById('pwScreen').style.display = 'none';
         document.getElementById('adminPanel').classList.add('show');
         document.getElementById('modalTitle').textContent = '⚙️ لوحة التحكم';
     } else {
-        document.getElementById('pwError').style.display = 'block';
+        attempts++;
+        localStorage.setItem('codehub_attempts', attempts);
         document.getElementById('pwInput').value = '';
         document.getElementById('pwInput').focus();
-    }
-}
 
-function selDiff(el) {
+        if (attempts >= 3) {
+            localStorage.setItem('codehub_lock_until', now + 30000);
+            localStorage.setItem('codehub_attempts', '0');
+            document.getElementById('pwInput').disabled = true;
+            let secs = 30;
+            document.getElementById('pwError').textContent = `🔒 3 محاولات فاشلة — انتظر ${secs} ثانية`;
+            document.getElementById('pwError').style.display = 'block';
+            const iv = setInterval(() => {
+                secs--;
+                document.getElementById('pwError').textContent = `🔒 انتظر ${secs} ثانية...`;
+                if (secs <= 0) {
+                    clearInterval(iv);
+                    document.getElementById('pwInput').disabled = false;
+                    document.getElementById('pwError').style.display = 'none';
+                }
+            }, 1000);
+        } else {
+            document.getElementById('pwError').textContent = `❌ كلمة المرور غلط — باقي ${3 - attempts} محاولة`;
+            document.getElementById('pwError').style.display = 'block';
+        }
+    }
+};
+
+window.selDiff = function(el) {
     document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('sel'));
     el.classList.add('sel');
     currentDiff = el.dataset.d;
-}
+};
 
-function previewModalImg(url) {
+window.previewModalImg = function(url) {
     const box = document.getElementById('modalImgPreview');
     const img = document.getElementById('modalImgEl');
     if (!url) { box.style.display='none'; return; }
     img.src = url;
     img.onload = () => box.style.display = 'block';
     img.onerror = () => box.style.display = 'none';
-}
+};
 
-function switchAdminTab(tab, el) {
+window.switchAdminTab = function(tab, el) {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
     document.getElementById('admin-' + tab).classList.add('active');
     if (tab === 'manage') loadManageList();
-}
+    if (tab === 'edittool') loadEditToolSelect();
+    if (tab === 'settings') loadSettingsTab();
+};
 
 // ===== ADD CARD =====
-async function addCard() {
+window.addCard = async function() {
     const title = document.getElementById('a-title').value.trim();
-    const desc  = document.getElementById('a-desc').value.trim();
-    const keys  = document.getElementById('a-keys').value.trim();
-    const img   = document.getElementById('a-img').value.trim();
-    const code  = document.getElementById('a-code').value.trim();
+    const desc = document.getElementById('a-desc').value.trim();
+    const keys = document.getElementById('a-keys').value.trim();
+    const img = document.getElementById('a-img').value.trim();
+    const code = document.getElementById('a-code').value.trim();
 
     if (!title || !desc || !code || !img) { showToast('ملأ جميع الحقول المطلوبة ⚠️','error'); return; }
 
@@ -1120,7 +1310,7 @@ async function addCard() {
     btn.innerHTML = '<div class="mini-spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div>';
 
     try {
-        await db.addDoc('html_cards', { title, description:desc, keywords:keys, imageUrl:img, code, difficulty:currentDiff, createdAt:Date.now() });
+        await addDoc(collection(db,'html_cards'), { title, description:desc, keywords:keys, imageUrl:img, code, difficulty:currentDiff, createdAt:Date.now() });
         ['a-title','a-desc','a-keys','a-img','a-code'].forEach(id => document.getElementById(id).value='');
         document.getElementById('modalImgPreview').style.display='none';
         await loadAll();
@@ -1128,15 +1318,15 @@ async function addCard() {
         closeAdminModal();
     } catch(e) { showToast('خطأ: '+e.message,'error'); }
     finally { btn.disabled=false; btn.innerHTML='<span>💾 حفظ الكارت</span>'; }
-}
+};
 
 // ===== ADD TOOL =====
-async function addTool() {
+window.addTool = async function() {
     const title = document.getElementById('t-title').value.trim();
-    const icon  = document.getElementById('t-icon').value.trim() || '🛠️';
-    const desc  = document.getElementById('t-desc').value.trim();
-    const keys  = document.getElementById('t-keys').value.trim();
-    const code  = document.getElementById('t-code').value.trim();
+    const icon = document.getElementById('t-icon').value.trim() || '🛠️';
+    const desc = document.getElementById('t-desc').value.trim();
+    const keys = document.getElementById('t-keys').value.trim();
+    const code = document.getElementById('t-code').value.trim();
 
     if (!title || !desc || !code) { showToast('ملأ جميع الحقول المطلوبة ⚠️','error'); return; }
 
@@ -1145,17 +1335,17 @@ async function addTool() {
     btn.innerHTML = '<div class="mini-spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div>';
 
     try {
-        await db.addDoc('tools', { title, icon, description:desc, keywords:keys, code, createdAt:Date.now() });
+        await addDoc(collection(db,'tools'), { title, icon, description:desc, keywords:keys, code, createdAt:Date.now() });
         ['t-title','t-icon','t-desc','t-keys','t-code'].forEach(id => document.getElementById(id).value='');
         await loadAll();
         showToast('تم حفظ الأداة! 🎉','success');
         closeAdminModal();
     } catch(e) { showToast('خطأ: '+e.message,'error'); }
     finally { btn.disabled=false; btn.innerHTML='<span>🛠️ حفظ الأداة</span>'; }
-}
+};
 
-// ===== MANAGE =====
-async function loadManageList() {
+// ===== MANAGE LIST =====
+window.loadManageList = async function() {
     const type = document.getElementById('manage-filter').value;
     const list = document.getElementById('adminCardsList');
     const items = allData[type] || [];
@@ -1170,39 +1360,150 @@ async function loadManageList() {
             </div>
             <button class="delete-btn" onclick="deleteItem('${type}','${item.id}')">🗑️ حذف</button>
         </div>`).join('');
-}
+};
 
-async function deleteItem(type, id) {
+window.deleteItem = async function(type, id) {
     if (!confirm('هتحذف العنصر ده؟')) return;
     const coll = type==='tools' ? 'tools' : 'html_cards';
     try {
-        await db.deleteDoc(coll, id);
+        await deleteDoc(doc(db, coll, id));
         await loadAll();
         loadManageList();
         showToast('تم الحذف ✅','success');
     } catch(e) { showToast('خطأ في الحذف','error'); }
-}
+};
 
 // ===== TOAST =====
 let toastTimer;
-function showToast(msg, type='info') {
+window.showToast = function(msg, type='info') {
     clearTimeout(toastTimer);
     const t = document.getElementById('toast');
     document.getElementById('toastIcon').textContent = type==='success'?'✅':type==='error'?'❌':'ℹ️';
     document.getElementById('toastMsg').textContent = msg;
     t.className = 'toast '+type+' show';
     toastTimer = setTimeout(()=>t.classList.remove('show'), 3500);
-}
+};
 
 // ===== ESCAPE =====
-function esc(s) {
+window.esc = function(s) {
     if(!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-}
+};
+
+// ===== EDIT TOOL =====
+window.loadEditToolSelect = function() {
+    const sel = document.getElementById('et-select');
+    sel.innerHTML = '<option value="">-- اختر أداة --</option>';
+    allData.tools.forEach(t => {
+        sel.innerHTML += `<option value="${esc(t.id)}">${esc(t.icon||'🛠️')} ${esc(t.title)}</option>`;
+    });
+    document.getElementById('et-form').style.display = 'none';
+};
+
+window.loadToolForEdit = function(id) {
+    if (!id) { document.getElementById('et-form').style.display = 'none'; return; }
+    const tool = allData.tools.find(t => t.id === id);
+    if (!tool) return;
+    document.getElementById('et-title').value = tool.title || '';
+    document.getElementById('et-icon').value = tool.icon || '🛠️';
+    document.getElementById('et-desc').value = tool.description || '';
+    document.getElementById('et-keys').value = tool.keywords || '';
+    document.getElementById('et-code').value = tool.code || '';
+    document.getElementById('et-form').style.display = 'block';
+};
+
+window.saveToolEdit = async function() {
+    const id = document.getElementById('et-select').value;
+    if (!id) return showToast('اختر أداة أولاً ⚠️', 'error');
+    const title = document.getElementById('et-title').value.trim();
+    const icon = document.getElementById('et-icon').value.trim() || '🛠️';
+    const description = document.getElementById('et-desc').value.trim();
+    const keywords = document.getElementById('et-keys').value.trim();
+    const code = document.getElementById('et-code').value.trim();
+    if (!title || !description || !code) return showToast('ملأ جميع الحقول المطلوبة ⚠️', 'error');
+    const btn = document.getElementById('saveToolEditBtn');
+    btn.disabled = true; btn.innerHTML = '<div class="mini-spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div>';
+    try {
+        await updateDoc(doc(db, 'tools', id), { title, icon, description, keywords, code });
+        await loadAll();
+        showToast('تم تحديث الأداة! ✅', 'success');
+        document.getElementById('et-select').value = '';
+        document.getElementById('et-form').style.display = 'none';
+    } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<span>💾 حفظ التعديلات</span>'; }
+};
+
+window.deleteToolFromEdit = async function() {
+    const id = document.getElementById('et-select').value;
+    if (!id) return showToast('اختر أداة أولاً ⚠️', 'error');
+    const tool = allData.tools.find(t => t.id === id);
+    if (!confirm(`هتحذف أداة "${tool?.title}"؟`)) return;
+    const btn = document.getElementById('deleteToolBtn');
+    btn.disabled = true;
+    try {
+        await deleteDoc(doc(db, 'tools', id));
+        await loadAll();
+        showToast('تم حذف الأداة ✅', 'success');
+        document.getElementById('et-select').value = '';
+        document.getElementById('et-form').style.display = 'none';
+        loadEditToolSelect();
+    } catch(e) { showToast('خطأ في الحذف', 'error'); }
+    finally { btn.disabled = false; }
+};
+
+// ===== SETTINGS =====
+const PW_KEY = 'codehub_admin_pw';
+function getAdminPassword() { return localStorage.getItem(PW_KEY) || ADMIN_PASSWORD; }
+
+window.loadSettingsTab = async function() {
+    ['s-old-pw','s-new-pw','s-confirm-pw'].forEach(id => document.getElementById(id).value = '');
+    try {
+        const snap = await getDoc(doc(db, 'settings', 'site'));
+        document.getElementById('s-custom-css').value = snap.exists() ? (snap.data().customCSS || '') : '';
+    } catch(_) { document.getElementById('s-custom-css').value = ''; }
+};
+
+window.changePassword = function() {
+    const oldPw = document.getElementById('s-old-pw').value;
+    const newPw = document.getElementById('s-new-pw').value.trim();
+    const confirm = document.getElementById('s-confirm-pw').value.trim();
+    if (oldPw !== getAdminPassword()) return showToast('كلمة المرور الحالية غلط ❌', 'error');
+    if (!newPw || newPw.length < 4) return showToast('كلمة المرور الجديدة قصيرة جداً ⚠️', 'error');
+    if (newPw !== confirm) return showToast('كلمتا المرور غير متطابقتين ❌', 'error');
+    localStorage.setItem(PW_KEY, newPw);
+    ['s-old-pw','s-new-pw','s-confirm-pw'].forEach(id => document.getElementById(id).value = '');
+    showToast('تم تغيير كلمة المرور ✅', 'success');
+};
+
+window.applyCustomCSS = async function() {
+    const css = document.getElementById('s-custom-css').value;
+    const btn = document.querySelector('[onclick="applyCustomCSS()"]');
+    if (btn) { btn.disabled = true; }
+    try {
+        await setDoc(doc(db, 'settings', 'site'), { customCSS: css }, { merge: true });
+        let styleEl = document.getElementById('custom-css-tag');
+        if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'custom-css-tag'; document.head.appendChild(styleEl); }
+        styleEl.textContent = css;
+        showToast('تم تطبيق التصميم على الجميع ✅', 'success');
+    } catch(e) { showToast('خطأ في الحفظ: ' + e.message, 'error'); }
+    finally { if (btn) btn.disabled = false; }
+};
+
+window.resetCustomCSS = async function() {
+    if (!confirm('هتمسح التصميم المخصص للجميع وترجع للتصميم الافتراضي؟')) return;
+    try {
+        await setDoc(doc(db, 'settings', 'site'), { customCSS: '' }, { merge: true });
+        const styleEl = document.getElementById('custom-css-tag');
+        if (styleEl) styleEl.textContent = '';
+        document.getElementById('s-custom-css').value = '';
+        showToast('تم إعادة التصميم الافتراضي للجميع ↩️', 'success');
+    } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+};
+
+// CSS يُحمَّل من Firebase في loadAll()
 
 // ===== INIT =====
 loadAll();
-
 </script>
 </body>
 </html>
