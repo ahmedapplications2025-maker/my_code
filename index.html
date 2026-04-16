@@ -558,6 +558,15 @@ body {
 .admin-panel.show { display: block; }
 
 .admin-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.sub-tab {
+    flex: 1; padding: 8px 12px; border-radius: 9px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer;
+    font-family: 'Cairo', sans-serif; font-size: 0.82em; font-weight: 700;
+    transition: all 0.2s;
+}
+.sub-tab:hover { border-color: var(--primary); color: var(--text); }
+.sub-tab.active { background: rgba(90,223,229,0.12); border-color: var(--primary); color: var(--primary); }
 .admin-tab {
     flex: 1; padding: 9px; border: 1px solid var(--border);
     border-radius: 10px; background: var(--surface2);
@@ -631,6 +640,13 @@ body {
     transition: all 0.25s; flex-shrink: 0;
 }
 .delete-btn:hover { background: var(--secondary); color: white; }
+.edit-btn {
+    padding: 6px 12px; border: 1px solid rgba(90,223,229,0.25) !important;
+    border-radius: 7px; background: rgba(90,223,229,0.1); color: var(--primary);
+    cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 600;
+    transition: all 0.25s; flex-shrink: 0;
+}
+.edit-btn:hover { background: var(--primary); color: #090B0F; }
 
 .divider { height: 1px; background: var(--border); margin: 4px 0; }
 
@@ -794,124 +810,94 @@ body {
             </div>
 
             <div id="adminPanel" class="admin-panel">
-                <div class="admin-tabs" style="flex-wrap:wrap;">
-                    <button class="admin-tab active" onclick="switchAdminTab('add',this)">➕ كود</button>
-                    <button class="admin-tab" onclick="switchAdminTab('addtool',this)">🛠️ أداة</button>
-                    <button class="admin-tab" onclick="switchAdminTab('edittool',this)">✏️ تعديل أداة</button>
+                <!-- 3 تبويبات رئيسية -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('add',this)">➕ إضافة</button>
                     <button class="admin-tab" onclick="switchAdminTab('manage',this)">📋 إدارة</button>
                     <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ إعدادات</button>
                 </div>
 
-                <!-- إضافة كود -->
+                <!-- ===== إضافة ===== -->
                 <div id="admin-add" class="admin-section active">
-                    <div class="form-row">
-                        <label class="form-label">عنوان الكود <span class="req">*</span></label>
-                        <input type="text" class="f-input" id="a-title" placeholder="مثال: زر تفاعلي متحرك">
+                    <div style="display:flex;gap:8px;margin-bottom:16px;">
+                        <button class="sub-tab active" id="subtab-code" onclick="switchSubTab('code',this)">🌐 كود HTML</button>
+                        <button class="sub-tab" id="subtab-tool" onclick="switchSubTab('tool',this)">🛠️ أداة</button>
                     </div>
-                    <div class="form-row">
-                        <label class="form-label">وصف الكود <span class="req">*</span></label>
-                        <textarea class="f-textarea" id="a-desc" placeholder="اشرح ما يفعله هذا الكود..."></textarea>
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">مستوى الصعوبة</label>
-                        <div class="diff-row">
-                            <button class="diff-btn sel" data-d="beginner" onclick="selDiff(this)">🟢 مبتدئ</button>
-                            <button class="diff-btn" data-d="intermediate" onclick="selDiff(this)">🟡 متوسط</button>
-                            <button class="diff-btn" data-d="advanced" onclick="selDiff(this)">🔴 متقدم</button>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">الكلمات المفتاحية</label>
-                        <input type="text" class="f-input" id="a-keys" placeholder="زر، تفاعلي، حركة">
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">رابط صورة المعاينة <span class="req">*</span></label>
-                        <input type="url" class="f-input" id="a-img" placeholder="https://..." oninput="previewModalImg(this.value)">
-                        <div class="img-preview" id="modalImgPreview"><img id="modalImgEl" src="" alt=""></div>
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">الكود البرمجي <span class="req">*</span></label>
-                        <textarea class="f-textarea f-code" id="a-code" placeholder="الصق الكود هنا..."></textarea>
-                    </div>
-                    <div class="divider"></div>
-                    <button class="submit-btn" id="submitBtn" onclick="addCard()"><span>💾 حفظ الكارت</span></button>
-                </div>
-
-                <!-- إضافة أداة -->
-                <div id="admin-addtool" class="admin-section">
-                    <div class="form-row">
-                        <label class="form-label">اسم الأداة <span class="req">*</span></label>
-                        <input type="text" class="f-input" id="t-title" placeholder="مثال: صانع برومبت الألعاب">
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">أيقونة الأداة (إيموجي)</label>
-                        <input type="text" class="f-input" id="t-icon" placeholder="🛠️" style="width:80px;text-align:center;font-size:1.4em;">
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">وصف الأداة <span class="req">*</span></label>
-                        <textarea class="f-textarea" id="t-desc" placeholder="اشرح ما تفعله هذه الأداة..."></textarea>
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">الكلمات المفتاحية</label>
-                        <input type="text" class="f-input" id="t-keys" placeholder="مثال: برومبت، ألعاب، AI">
-                    </div>
-                    <div class="form-row">
-                        <label class="form-label">كود HTML الأداة <span class="req">*</span></label>
-                        <textarea class="f-textarea f-code" id="t-code" placeholder="الصق كود HTML الكامل هنا..." style="min-height:140px;"></textarea>
-                    </div>
-                    <div class="divider"></div>
-                    <button class="submit-btn" id="submitToolBtn" onclick="addTool()"><span>🛠️ حفظ الأداة</span></button>
-                </div>
-
-                <!-- إدارة -->
-                <div id="admin-manage" class="admin-section">
-                    <div style="margin-bottom:10px;">
-                        <select class="f-select" id="manage-filter" onchange="loadManageList()">
-                            <option value="html">🌐 أكواد HTML</option>
-                            <option value="tools">🛠️ الأدوات</option>
-                        </select>
-                    </div>
-                    <div class="admin-cards-list" id="adminCardsList"></div>
-                </div>
-
-                <!-- تعديل أداة -->
-                <div id="admin-edittool" class="admin-section">
-                    <div class="form-row">
-                        <label class="form-label">اختر الأداة للتعديل</label>
-                        <select class="f-select" id="et-select" onchange="loadToolForEdit(this.value)">
-                            <option value="">-- اختر أداة --</option>
-                        </select>
-                    </div>
-                    <div id="et-form" style="display:none;">
+                    <!-- إضافة كود -->
+                    <div id="sub-code">
                         <div class="form-row">
-                            <label class="form-label">اسم الأداة <span class="req">*</span></label>
-                            <input type="text" class="f-input" id="et-title">
+                            <label class="form-label">عنوان الكود <span class="req">*</span></label>
+                            <input type="text" class="f-input" id="a-title" placeholder="مثال: زر تفاعلي متحرك">
                         </div>
                         <div class="form-row">
-                            <label class="form-label">أيقونة (إيموجي)</label>
-                            <input type="text" class="f-input" id="et-icon" style="width:80px;text-align:center;font-size:1.4em;">
+                            <label class="form-label">وصف الكود <span class="req">*</span></label>
+                            <textarea class="f-textarea" id="a-desc" placeholder="اشرح ما يفعله هذا الكود..."></textarea>
                         </div>
                         <div class="form-row">
-                            <label class="form-label">وصف الأداة <span class="req">*</span></label>
-                            <textarea class="f-textarea" id="et-desc"></textarea>
+                            <label class="form-label">مستوى الصعوبة</label>
+                            <div class="diff-row">
+                                <button class="diff-btn sel" data-d="beginner" onclick="selDiff(this)">🟢 مبتدئ</button>
+                                <button class="diff-btn" data-d="intermediate" onclick="selDiff(this)">🟡 متوسط</button>
+                                <button class="diff-btn" data-d="advanced" onclick="selDiff(this)">🔴 متقدم</button>
+                            </div>
                         </div>
                         <div class="form-row">
                             <label class="form-label">الكلمات المفتاحية</label>
-                            <input type="text" class="f-input" id="et-keys">
+                            <input type="text" class="f-input" id="a-keys" placeholder="زر، تفاعلي، حركة">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">رابط صورة المعاينة <span class="req">*</span></label>
+                            <input type="url" class="f-input" id="a-img" placeholder="https://..." oninput="previewModalImg(this.value)">
+                            <div class="img-preview" id="modalImgPreview"><img id="modalImgEl" src="" alt=""></div>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">الكود البرمجي <span class="req">*</span></label>
+                            <textarea class="f-textarea f-code" id="a-code" placeholder="الصق الكود هنا..."></textarea>
+                        </div>
+                        <div class="divider"></div>
+                        <button class="submit-btn" id="submitBtn" onclick="addCard()"><span>💾 حفظ الكارت</span></button>
+                    </div>
+                    <!-- إضافة أداة -->
+                    <div id="sub-tool" style="display:none;">
+                        <div class="form-row">
+                            <label class="form-label">اسم الأداة <span class="req">*</span></label>
+                            <input type="text" class="f-input" id="t-title" placeholder="مثال: صانع برومبت الألعاب">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">أيقونة الأداة (إيموجي)</label>
+                            <input type="text" class="f-input" id="t-icon" placeholder="🛠️" style="width:80px;text-align:center;font-size:1.4em;">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">وصف الأداة <span class="req">*</span></label>
+                            <textarea class="f-textarea" id="t-desc" placeholder="اشرح ما تفعله هذه الأداة..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">الكلمات المفتاحية</label>
+                            <input type="text" class="f-input" id="t-keys" placeholder="مثال: برومبت، ألعاب، AI">
                         </div>
                         <div class="form-row">
                             <label class="form-label">كود HTML الأداة <span class="req">*</span></label>
-                            <textarea class="f-textarea f-code" id="et-code" style="min-height:140px;"></textarea>
+                            <textarea class="f-textarea f-code" id="t-code" placeholder="الصق كود HTML الكامل هنا..." style="min-height:140px;"></textarea>
                         </div>
                         <div class="divider"></div>
-                        <div style="display:flex;gap:8px;">
-                            <button class="submit-btn" id="saveToolEditBtn" onclick="saveToolEdit()" style="flex:2;"><span>💾 حفظ التعديلات</span></button>
-                            <button class="submit-btn" id="deleteToolBtn" onclick="deleteToolFromEdit()" style="flex:1;background:linear-gradient(135deg,#ff4466,#cc0033);box-shadow:0 4px 18px rgba(255,0,60,0.25);"><span>🗑️ حذف</span></button>
-                        </div>
+                        <button class="submit-btn" id="submitToolBtn" onclick="addTool()"><span>🛠️ حفظ الأداة</span></button>
                     </div>
                 </div>
 
-                <!-- إعدادات -->
+                <!-- ===== إدارة ===== -->
+                <div id="admin-manage" class="admin-section">
+                    <div style="display:flex;gap:8px;margin-bottom:14px;">
+                        <button class="sub-tab active" id="msubtab-html" onclick="switchManageTab('html',this)">🌐 أكواد</button>
+                        <button class="sub-tab" id="msubtab-tools" onclick="switchManageTab('tools',this)">🛠️ أدوات</button>
+                    </div>
+                    <div class="admin-cards-list" id="adminCardsList"></div>
+                    <div id="edit-form-container" style="display:none;">
+                        <div class="divider" style="margin:14px 0;"></div>
+                        <div id="edit-form-inner"></div>
+                    </div>
+                </div>
+
+                                <!-- إعدادات -->
                 <div id="admin-settings" class="admin-section">
                     <div style="background:rgba(255,85,128,0.05);border:1px solid rgba(255,85,128,0.15);border-radius:12px;padding:16px;margin-bottom:14px;">
                         <div style="font-size:0.85em;font-weight:800;color:var(--text-muted);margin-bottom:12px;">🔑 تغيير كلمة المرور</div>
@@ -1271,7 +1257,7 @@ window.checkPassword = function() {
 };
 
 window.selDiff = function(el) {
-    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('sel'));
+    document.querySelectorAll('#admin-add .diff-btn').forEach(b => b.classList.remove('sel'));
     el.classList.add('sel');
     currentDiff = el.dataset.d;
 };
@@ -1290,9 +1276,24 @@ window.switchAdminTab = function(tab, el) {
     el.classList.add('active');
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
     document.getElementById('admin-' + tab).classList.add('active');
-    if (tab === 'manage') loadManageList();
-    if (tab === 'edittool') loadEditToolSelect();
+    if (tab === 'manage') { switchManageTab('html', document.getElementById('msubtab-html')); }
     if (tab === 'settings') loadSettingsTab();
+};
+
+window.switchSubTab = function(type, el) {
+    document.querySelectorAll('#admin-add .sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('sub-code').style.display = type === 'code' ? 'block' : 'none';
+    document.getElementById('sub-tool').style.display = type === 'tool' ? 'block' : 'none';
+};
+
+let currentManageType = 'html';
+window.switchManageTab = function(type, el) {
+    currentManageType = type;
+    document.querySelectorAll('#admin-manage .sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('edit-form-container').style.display = 'none';
+    loadManageList();
 };
 
 // ===== ADD CARD =====
@@ -1346,20 +1347,125 @@ window.addTool = async function() {
 
 // ===== MANAGE LIST =====
 window.loadManageList = async function() {
-    const type = document.getElementById('manage-filter').value;
+    const type = currentManageType || 'html';
     const list = document.getElementById('adminCardsList');
     const items = allData[type] || [];
+    document.getElementById('edit-form-container').style.display = 'none';
 
     if (items.length === 0) { list.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:24px;">لا يوجد عناصر بعد</div>'; return; }
 
     list.innerHTML = items.map(item => `
-        <div class="admin-card-item">
-            <div>
+        <div class="admin-card-item" id="manage-item-${item.id}">
+            <div style="flex:1;min-width:0;">
                 <div class="admin-card-title">${esc(item.title)}</div>
                 <div class="admin-card-meta">${type==='tools' ? (item.icon||'🛠️')+' أداة' : (item.difficulty==='beginner'?'🟢 مبتدئ':item.difficulty==='intermediate'?'🟡 متوسط':'🔴 متقدم')}</div>
             </div>
-            <button class="delete-btn" onclick="deleteItem('${type}','${item.id}')">🗑️ حذف</button>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+                <button class="edit-btn" onclick="openInlineEdit('${type}','${item.id}')">✏️ تعديل</button>
+                <button class="delete-btn" onclick="deleteItem('${type}','${item.id}')">🗑️</button>
+            </div>
         </div>`).join('');
+};
+
+// ===== INLINE EDIT =====
+let currentEditId = null;
+let currentEditType = null;
+let currentInlineEditDiff = 'beginner';
+
+window.openInlineEdit = function(type, id) {
+    currentEditId = id;
+    currentEditType = type;
+    const container = document.getElementById('edit-form-container');
+    const inner = document.getElementById('edit-form-inner');
+
+    // scroll to form
+    container.style.display = 'block';
+
+    if (type === 'tools') {
+        const item = allData.tools.find(t => t.id === id);
+        if (!item) return;
+        inner.innerHTML = `
+            <div style="font-size:0.85em;font-weight:800;color:var(--primary);margin-bottom:12px;">✏️ تعديل أداة: ${esc(item.title)}</div>
+            <div class="form-row"><label class="form-label">اسم الأداة <span class="req">*</span></label>
+                <input type="text" class="f-input" id="ie-title" value="${esc(item.title)}"></div>
+            <div class="form-row"><label class="form-label">أيقونة</label>
+                <input type="text" class="f-input" id="ie-icon" value="${esc(item.icon||'🛠️')}" style="width:80px;text-align:center;font-size:1.4em;"></div>
+            <div class="form-row"><label class="form-label">الوصف <span class="req">*</span></label>
+                <textarea class="f-textarea" id="ie-desc">${esc(item.description||'')}</textarea></div>
+            <div class="form-row"><label class="form-label">الكلمات المفتاحية</label>
+                <input type="text" class="f-input" id="ie-keys" value="${esc(item.keywords||'')}"></div>
+            <div class="form-row"><label class="form-label">كود HTML <span class="req">*</span></label>
+                <textarea class="f-textarea f-code" id="ie-code" style="min-height:140px;">${esc(item.code||'')}</textarea></div>
+            <div class="divider"></div>
+            <div style="display:flex;gap:8px;">
+                <button class="submit-btn" onclick="saveInlineEdit()" style="flex:2;"><span>💾 حفظ التعديلات</span></button>
+                <button class="submit-btn" onclick="document.getElementById('edit-form-container').style.display='none'" style="flex:1;background:linear-gradient(135deg,#555,#333);box-shadow:none;"><span>✕ إلغاء</span></button>
+            </div>`;
+    } else {
+        const item = allData.html.find(c => c.id === id);
+        if (!item) return;
+        currentInlineEditDiff = item.difficulty || 'beginner';
+        inner.innerHTML = `
+            <div style="font-size:0.85em;font-weight:800;color:var(--primary);margin-bottom:12px;">✏️ تعديل كود: ${esc(item.title)}</div>
+            <div class="form-row"><label class="form-label">العنوان <span class="req">*</span></label>
+                <input type="text" class="f-input" id="ie-title" value="${esc(item.title)}"></div>
+            <div class="form-row"><label class="form-label">الوصف <span class="req">*</span></label>
+                <textarea class="f-textarea" id="ie-desc">${esc(item.description||'')}</textarea></div>
+            <div class="form-row"><label class="form-label">مستوى الصعوبة</label>
+                <div class="diff-row">
+                    <button class="diff-btn ${currentInlineEditDiff==='beginner'?'sel':''}" data-d="beginner" onclick="selInlineDiff(this)">🟢 مبتدئ</button>
+                    <button class="diff-btn ${currentInlineEditDiff==='intermediate'?'sel':''}" data-d="intermediate" onclick="selInlineDiff(this)">🟡 متوسط</button>
+                    <button class="diff-btn ${currentInlineEditDiff==='advanced'?'sel':''}" data-d="advanced" onclick="selInlineDiff(this)">🔴 متقدم</button>
+                </div></div>
+            <div class="form-row"><label class="form-label">الكلمات المفتاحية</label>
+                <input type="text" class="f-input" id="ie-keys" value="${esc(item.keywords||'')}"></div>
+            <div class="form-row"><label class="form-label">رابط الصورة <span class="req">*</span></label>
+                <input type="url" class="f-input" id="ie-img" value="${esc(item.imageUrl||'')}" oninput="previewInlineImg(this.value)">
+                <div class="img-preview" id="inlineImgPreview" style="${item.imageUrl?'display:block':'display:none'}"><img id="inlineImgEl" src="${esc(item.imageUrl||'')}" alt=""></div></div>
+            <div class="form-row"><label class="form-label">الكود البرمجي <span class="req">*</span></label>
+                <textarea class="f-textarea f-code" id="ie-code">${esc(item.code||'')}</textarea></div>
+            <div class="divider"></div>
+            <div style="display:flex;gap:8px;">
+                <button class="submit-btn" onclick="saveInlineEdit()" style="flex:2;"><span>💾 حفظ التعديلات</span></button>
+                <button class="submit-btn" onclick="document.getElementById('edit-form-container').style.display='none'" style="flex:1;background:linear-gradient(135deg,#555,#333);box-shadow:none;"><span>✕ إلغاء</span></button>
+            </div>`;
+    }
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.selInlineDiff = function(btn) {
+    document.querySelectorAll('#edit-form-inner .diff-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    currentInlineEditDiff = btn.dataset.d;
+};
+
+window.previewInlineImg = function(url) {
+    const prev = document.getElementById('inlineImgPreview');
+    const img = document.getElementById('inlineImgEl');
+    if (url) { img.src = url; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+};
+
+window.saveInlineEdit = async function() {
+    const title = document.getElementById('ie-title').value.trim();
+    const desc = document.getElementById('ie-desc').value.trim();
+    const keys = document.getElementById('ie-keys')?.value.trim() || '';
+    const code = document.getElementById('ie-code').value.trim();
+    if (!title || !desc || !code) return showToast('ملأ جميع الحقول المطلوبة ⚠️', 'error');
+    try {
+        if (currentEditType === 'tools') {
+            const icon = document.getElementById('ie-icon').value.trim() || '🛠️';
+            await updateDoc(doc(db, 'tools', currentEditId), { title, icon, description: desc, keywords: keys, code });
+        } else {
+            const imageUrl = document.getElementById('ie-img').value.trim();
+            if (!imageUrl) return showToast('ملأ جميع الحقول المطلوبة ⚠️', 'error');
+            await updateDoc(doc(db, 'html_cards', currentEditId), { title, description: desc, keywords: keys, imageUrl, code, difficulty: currentInlineEditDiff });
+        }
+        await loadAll();
+        showToast('تم التحديث! ✅', 'success');
+        document.getElementById('edit-form-container').style.display = 'none';
+        loadManageList();
+    } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
 };
 
 window.deleteItem = async function(type, id) {
@@ -1388,6 +1494,90 @@ window.showToast = function(msg, type='info') {
 window.esc = function(s) {
     if(!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+};
+
+// ===== EDIT CODE =====
+let currentEditCodeDiff = 'beginner';
+
+window.loadEditCodeSelect = function() {
+    const sel = document.getElementById('ec-select');
+    sel.innerHTML = '<option value="">-- اختر كود --</option>';
+    allData.html.forEach(c => {
+        sel.innerHTML += `<option value="${esc(c.id)}">${esc(c.title)}</option>`;
+    });
+    document.getElementById('ec-form').style.display = 'none';
+};
+
+window.loadCodeForEdit = function(id) {
+    if (!id) { document.getElementById('ec-form').style.display = 'none'; return; }
+    const card = allData.html.find(c => c.id === id);
+    if (!card) return;
+    document.getElementById('ec-title').value = card.title || '';
+    document.getElementById('ec-desc').value = card.description || '';
+    document.getElementById('ec-keys').value = card.keywords || '';
+    document.getElementById('ec-img').value = card.imageUrl || '';
+    document.getElementById('ec-code').value = card.code || '';
+    currentEditCodeDiff = card.difficulty || 'beginner';
+    document.querySelectorAll('#ec-form .diff-btn').forEach(b => {
+        b.classList.toggle('sel', b.dataset.d === currentEditCodeDiff);
+    });
+    const prev = document.getElementById('editCodeImgPreview');
+    const img = document.getElementById('editCodeImgEl');
+    if (card.imageUrl) { img.src = card.imageUrl; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+    document.getElementById('ec-form').style.display = 'block';
+};
+
+window.selEditCodeDiff = function(btn) {
+    document.querySelectorAll('#ec-form .diff-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    currentEditCodeDiff = btn.dataset.d;
+};
+
+window.previewEditCodeImg = function(url) {
+    const prev = document.getElementById('editCodeImgPreview');
+    const img = document.getElementById('editCodeImgEl');
+    if (url) { img.src = url; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+};
+
+window.saveCodeEdit = async function() {
+    const id = document.getElementById('ec-select').value;
+    if (!id) return showToast('اختر كود أولاً ⚠️', 'error');
+    const title = document.getElementById('ec-title').value.trim();
+    const description = document.getElementById('ec-desc').value.trim();
+    const keywords = document.getElementById('ec-keys').value.trim();
+    const imageUrl = document.getElementById('ec-img').value.trim();
+    const code = document.getElementById('ec-code').value.trim();
+    if (!title || !description || !code || !imageUrl) return showToast('ملأ جميع الحقول المطلوبة ⚠️', 'error');
+    const btn = document.getElementById('saveCodeEditBtn');
+    btn.disabled = true; btn.innerHTML = '<div class="mini-spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div>';
+    try {
+        await updateDoc(doc(db, 'html_cards', id), { title, description, keywords, imageUrl, code, difficulty: currentEditCodeDiff });
+        await loadAll();
+        showToast('تم تحديث الكود! ✅', 'success');
+        document.getElementById('ec-select').value = '';
+        document.getElementById('ec-form').style.display = 'none';
+    } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<span>💾 حفظ التعديلات</span>'; }
+};
+
+window.deleteCodeFromEdit = async function() {
+    const id = document.getElementById('ec-select').value;
+    if (!id) return showToast('اختر كود أولاً ⚠️', 'error');
+    const card = allData.html.find(c => c.id === id);
+    if (!confirm(`هتحذف كود "${card?.title}"؟`)) return;
+    const btn = document.getElementById('deleteCodeBtn');
+    btn.disabled = true;
+    try {
+        await deleteDoc(doc(db, 'html_cards', id));
+        await loadAll();
+        showToast('تم حذف الكود ✅', 'success');
+        document.getElementById('ec-select').value = '';
+        document.getElementById('ec-form').style.display = 'none';
+        loadEditCodeSelect();
+    } catch(e) { showToast('خطأ في الحذف', 'error'); }
+    finally { btn.disabled = false; }
 };
 
 // ===== EDIT TOOL =====
