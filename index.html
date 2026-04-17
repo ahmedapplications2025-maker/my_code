@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CodeHub - مكتبة الأكواد البرمجية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>
+// تسجيل Service Worker للتخزين المؤقت وتشغيل الموقع بدون نت
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
+}
+</script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1129,16 +1137,30 @@ function showFull() {
     document.getElementById('homePage').style.display = 'none';
     document.getElementById('footerEl').style.display = 'none';
     document.body.style.overflow = 'hidden';
+    // ← إضافة state في الـ history عشان زرار Back في الأندرويد يرجع للقائمة
+    history.pushState({ page: 'fullView' }, '', '');
 }
 
-window.closeFull = function() {
+window.closeFull = function(fromPopstate) {
     document.getElementById('fullView').classList.remove('show');
     document.getElementById('homePage').style.display = 'block';
     document.getElementById('footerEl').style.display = 'block';
     document.body.style.overflow = '';
     document.getElementById('fvBody').innerHTML = '';
     document.querySelectorAll('.tool-row').forEach(t => t.classList.remove('open'));
+    // لو مش جاي من popstate، نرجع في الـ history يدوياً
+    if (!fromPopstate && history.state && history.state.page === 'fullView') {
+        history.back();
+    }
 };
+
+// ← معالجة زرار Back في الأندرويد
+window.addEventListener('popstate', function(e) {
+    const fullView = document.getElementById('fullView');
+    if (fullView && fullView.classList.contains('show')) {
+        window.closeFull(true); // true = جاي من popstate، متعملش history.back() تاني
+    }
+});
 
 // ===== CODE ROW BUTTONS =====
 window.toggleCodeRowBox = function(btn, e) {
